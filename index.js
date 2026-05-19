@@ -1,6 +1,6 @@
 /////////////////////////////////////
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
@@ -26,9 +26,32 @@ async function run() {
     await client.connect();
     const db = client.db("drivefleet");
     const carCollection = db.collection("cars");
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
-    );
+
+    app.get("/cars", async (req, res) => {
+      const result = await carCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/cars/:carsId", async (req, res) => {
+      const { carsId } = req.params;
+      const result = await carCollection.findOne({ _id: new ObjectId(carsId) });
+      res.send(result);
+    });
+
+    app.patch("/cars/:carsId", async (req, res) => {
+      const { carsId } = req.params;
+      const editedData = req.body;
+      const result = await carCollection.updateOne(
+        { _id: new ObjectId(carsId) },
+        { $set: editedData },
+      );
+      res.send(result);
+    });
+
+    app.get("/featured-cars", async (req, res) => {
+      const result = await carCollection.find().limit(3).toArray();
+      res.send(result);
+    });
   } catch (error) {
     console.error("MongoDB connection faild:", error);
     process.exit(1);
