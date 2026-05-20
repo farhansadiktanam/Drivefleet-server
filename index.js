@@ -32,19 +32,33 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/cars/:carsId", async (req, res) => {
-      const { carsId } = req.params;
-      const result = await carCollection.findOne({ _id: new ObjectId(carsId) });
+    app.get("/cars/:carId", async (req, res) => {
+      const { carId } = req.params;
+      const result = await carCollection.findOne({ _id: new ObjectId(carId) });
       res.send(result);
     });
 
-    app.patch("/cars/:carsId", async (req, res) => {
-      const { carsId } = req.params;
+    app.post("/cars", async (req, res) => {
+      const carData = req.body;
+      const result = await carCollection.insertOne(carData);
+    });
+
+    app.patch("/cars/:carId", async (req, res) => {
+      const { carId } = req.params;
       const editedData = req.body;
       const result = await carCollection.updateOne(
-        { _id: new ObjectId(carsId) },
+        { _id: new ObjectId(carId) },
         { $set: editedData },
       );
+      res.send(result);
+    });
+
+    app.delete("/cars/:carId", async (req, res) => {
+      const { carId } = req.params;
+      const result = await carCollection.deleteOne({
+        _id: new ObjectId(carId),
+      });
+
       res.send(result);
     });
 
