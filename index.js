@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
     const db = client.db("drivefleet");
     const carCollection = db.collection("cars");
+    const carBookingCollection = db.collection("carbooking");
 
     app.get("/cars", async (req, res) => {
       const result = await carCollection.find().toArray();
@@ -41,6 +42,7 @@ async function run() {
     app.post("/cars", async (req, res) => {
       const carData = req.body;
       const result = await carCollection.insertOne(carData);
+      res.send(result);
     });
 
     app.patch("/cars/:carId", async (req, res) => {
@@ -66,6 +68,30 @@ async function run() {
       const result = await carCollection.find().limit(3).toArray();
       res.send(result);
     });
+
+    app.post("/my-bookings", async (req, res) => {
+      const carBookingData = req.body;
+      const result = await carBookingCollection.insertOne(carBookingData);
+
+      res.send(result);
+    });
+
+    app.get("/my-bookings/:userId", async (req, res) => {
+      const { userId } = req.params;
+      const result = await carBookingCollection.find({ userId }).toArray();
+      res.send(result);
+    });
+
+    app.delete("/my-bookings/:bookingId", async (req, res) => {
+      const { bookingId } = req.params;
+      const result = await carBookingCollection.deleteOne({
+        _id: new ObjectId(bookingId),
+      });
+      res.send(result);
+    });
+
+    /////////////////////////
+    //////
   } catch (error) {
     console.error("MongoDB connection faild:", error);
     process.exit(1);
