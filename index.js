@@ -22,7 +22,9 @@ const client = new MongoClient(uri, {
   },
 });
 
-const JWKS = createRemoteJWKSet(new URL("http://localhost:3000/api/auth/jwks"));
+const JWKS = createRemoteJWKSet(
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`),
+);
 
 const verifyToken = async (req, res, next) => {
   const authHeader = await req?.headers.authorization;
@@ -46,7 +48,7 @@ const verifyToken = async (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("drivefleet");
     const carCollection = db.collection("cars");
     const carBookingCollection = db.collection("carbooking");
@@ -94,6 +96,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/my-bookings", async (req, res) => {
+      const result = await carBookingCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/my-bookings", verifyToken, async (req, res) => {
       const carBookingData = req.body;
       const result = await carBookingCollection.insertOne(carBookingData);
@@ -103,11 +110,13 @@ async function run() {
 
     app.get("/my-bookings/:userId", async (req, res) => {
       const { userId } = req.params;
-      const result = await carBookingCollection.find({ userId }).toArray();
+      const result = await carBookingCollection
+        .find({ userId: userId })
+        .toArray();
       res.send(result);
     });
 
-    app.delete("/my-bookings/:bookingId", async (req, res) => {
+    app.delete("/my-bookings/:bookingId", verifyToken, async (req, res) => {
       const { bookingId } = req.params;
       const result = await carBookingCollection.deleteOne({
         _id: new ObjectId(bookingId),
@@ -123,6 +132,10 @@ async function run() {
   }
 }
 run().catch(console.dir);
+
+app.get("/", (req, res) => {
+  res.send("Server is running fine...");
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
