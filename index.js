@@ -11,6 +11,24 @@ const uri = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://drivefleet-client-ashen.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
